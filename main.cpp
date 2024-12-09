@@ -23,8 +23,5 @@ int main(int argc, const char * argv[]) {
     // here, we choose to run once, or do multiple replicates
     sim.run();
     
-    
-    
-    
     return 0;
 }

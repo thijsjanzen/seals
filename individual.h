@@ -27,6 +27,7 @@ struct individual {
                size_t member_id) :
     energy(init_energy), stage(init_stage), ID(member_id) {
         milk = 0.0;
+        current_location = location::colony;
     }
     
     bool survive(rnd_t& rndgen) {
@@ -56,7 +57,7 @@ struct individual {
     }
     
     double calc_foraging_prob() {
-        if (energy < 0.5) return 1.0;
+        if (energy < 0.3) return 1.0;
         
         return 0.0; // this can also be done smarter of course.
     }
@@ -73,6 +74,8 @@ struct individual {
             if (foraging_duration < 1) {
                 // return to colony
                 current_location = colony;
+                energy = 1.0;
+                milk = 1.0;
             }
         }
     }
@@ -90,12 +93,13 @@ struct individual {
         }
         if (current_location == colony) {
             milk += params.milk_production;
-            energy -= params.milk_production;
+            energy -= 0.1 * params.milk_production;
         }
     }
     
     void pay_maintenance(const parameters& params) {
         energy -= params.maintenance_cost;
+        if (milk > 1.0) energy -= params.maintenance_cost;
     }
     
     bool allow_allo_nursing() {
