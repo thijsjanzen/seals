@@ -23,9 +23,14 @@ struct simulation {
     void run() {
         id_counter = 0;
         initialize();
-        
+        std::cout << "Running!!" << std::endl;
+        std::ofstream out("results.csv", std::ios::app);
+        out << "Season" << "\t" << "Day" << "\t" << "ID" << "\t" << "Location" << "\t" << "Stage" << "\t" << "Energy" << "\t" << "Milk";
+        out << '\n';
+
         for (size_t season = 0; season < params.num_seasons; ++season) {
-            simulate_season(season);
+            std::cout << "Season: " << season << std::endl;
+            simulate_season(season, out);
             update_population_end_of_season();
             std::cout << season << " " << mothers.size() << " " << pups.size() << "\n";
             if (mothers.size() + pups.size() < 1) break;
@@ -45,11 +50,11 @@ struct simulation {
         }
     }
     
-    void simulate_season(size_t season) {
+    void simulate_season(size_t season, std::ofstream& out) {
         for (size_t days = 0; days < params.season_length; ++days) {
             update_mothers();
             update_pups();
-            write_to_file(season, days);
+            write_to_file(season, days, out);
             std::cout << season << " " << days << " " << mothers.size() << " " << pups.size() << "\n";
         }
     }
@@ -57,14 +62,19 @@ struct simulation {
     void update_mothers() {
         available_mothers.clear();
         for (size_t i = 0; i < mothers.size(); ) {
-            mothers[i].pay_maintenance(params);
             mothers[i].start_stop_foraging(rndgen,
                                   params);
-            mothers[i].produce_milk(params);
-            
-            
-            
-            if (!mothers[i].survive(rndgen)) {
+
+            if (mothers[i].current_location == location::colony) {
+                mothers[i].pay_maintenance(params);
+                if (mothers[i].live_offspring) {mothers[i].time_since_pup_death = -1;}
+                else {mothers[i].time_since_pup_death++;}
+                if (mothers[i].time_since_pup_death < params.milk_prod_cutoff) {
+                    mothers[i].produce_milk(params);
+                }
+            }
+
+            if (!mothers[i].survive(rndgen, params.c_survival_mother)) {
                 mothers[i] = mothers.back();
                 mothers.pop_back();
             } else {
@@ -80,7 +90,13 @@ struct simulation {
     void update_pups() {
         for (size_t i = 0; i < pups.size(); ) {
             pups[i].pay_maintenance(params);
-            if (!pups[i].survive(rndgen)) {
+            if (!pups[i].survive(rndgen,params.c_survival_pup)) {
+                //a little for loop to update whether this mother has a dead pup or not... there must be an easier way to do this?
+                for (int j = 0; j < mothers.size(); j++) {
+                    if (mothers[j].ID == pups[i].mother_ID) {
+                        mothers[j].live_offspring = false;
+                    }
+                }
                 pups[i] = pups.back();
                 pups.pop_back();
             } else {
@@ -130,12 +146,22 @@ struct simulation {
     
     
     void update_population_end_of_season() {
-        for (auto& i : pups) {
-            i.stage = mother;
-            i.current_location = colony;
-            mothers.push_back(i);
+        //only add pups to the mother population if there is still space
+        //either fixed cap or density dependent
+        //for now, fixed cap, can be changed later
+        int OpenSpaces = params.max_pop_size - mothers.size();
+
+        for (int i = 0; i < OpenSpaces; i++) {
+            if (pups.size() < 1) { break; }
+            int j = rndgen.random_number(pups.size());
+            pups[j].stage = mother;
+            pups[j].current_location = colony;
+            mothers.push_back(pups[j]);
+            pups[j] = pups.back();
+            pups.pop_back();
         }
         pups.clear();
+
         
         for (size_t i = 0; i < mothers.size();) {
             if (!rndgen.bernouilli(params.winter_survival_prob)) {
@@ -164,8 +190,9 @@ struct simulation {
     }
     
     void write_to_file(size_t season,
-                       size_t day) {
-        std::ofstream out("results.txt", std::ios::app);
+                       size_t day,
+                       std::ofstream& out) {
+        //std::ofstream out("results.csv", std::ios::app);
         for (const auto& i : mothers) {
             out << season   << "\t" << day
                             << "\t" << i.ID
@@ -184,7 +211,7 @@ struct simulation {
                             << "\t" << i.milk
                             << "\n";
         }
-        out.close();
+        //out.close();
     }
     
     
