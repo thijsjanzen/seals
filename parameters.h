@@ -32,6 +32,10 @@ struct parameters {
     size_t max_num_tries;
     
     double milk_consumption;
+    int max_pop_size;
+    double milk_prod_cutoff;
+    double c_survival_mother;
+    double c_survival_pup;
     
     void read_from_config(const std::string file_name) {
         ConfigFile from_config(file_name);
@@ -51,9 +55,12 @@ struct parameters {
         
         milk_production = from_config.getValueOfKey<double>("milk_production");
         milk_consumption = from_config.getValueOfKey<double>("milk_consumption");
-        
         maintenance_cost = from_config.getValueOfKey<double>("maintenance_cost");
         
         max_num_tries = from_config.getValueOfKey<size_t>("max_num_tries");
+        max_pop_size = from_config.getValueOfKey<size_t>("max_pop_size");
+        milk_prod_cutoff = from_config.getValueOfKey<size_t>("milk_prod_cutoff");
+        c_survival_mother = from_config.getValueOfKey<size_t>("c_survival_mother");
+        c_survival_pup = from_config.getValueOfKey<size_t>("c_survival_pup");
     }
 };
