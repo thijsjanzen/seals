@@ -16,6 +16,8 @@ struct individual {
     size_t ID;
     size_t offspring_ID;
     size_t mother_ID;
+    bool live_offspring;
+    int time_since_pup_death;
     
     int foraging_duration;
     
@@ -28,20 +30,21 @@ struct individual {
     energy(init_energy), stage(init_stage), ID(member_id) {
         milk = 0.0;
         current_location = location::colony;
+        time_since_pup_death = -1;
     }
     
-    bool survive(rnd_t& rndgen) {
-        double prob = calc_survival_prob();
+    bool survive(rnd_t& rndgen, double c_survival) {
+        double prob = calc_survival_prob(c_survival);
         if (!rndgen.bernouilli(prob)) return false;
         
         return true; // yay, survived!
     }
     
-    double calc_survival_prob() {
+    double calc_survival_prob(double c_survival) {
         if (energy < 0) energy = 0;
-        
-        double prob = energy; // this should be done smarter ofc.
-        if (prob > 1.0) prob = 1.0;
+        double prob = 1.0 - exp(-c_survival * energy);
+        //double prob = energy; // this should be done smarter ofc.
+        //if (prob > 1.0) prob = 1.0;
         
         return prob;
     }
@@ -53,13 +56,18 @@ struct individual {
                              new_id);
         offspring.mother_ID = ID;
         offspring_ID = new_id;
+        live_offspring = true;
         return offspring;
     }
     
     double calc_foraging_prob() {
-        if (energy < 0.3) return 1.0;
         
-        return 0.0; // this can also be done smarter of course.
+        double foraging_prob = 1 - energy;
+        if (foraging_prob > 1 || foraging_prob < 0) { std::cout << "Error! Foraging_prob not a probability..." << std::endl; }
+        return foraging_prob;
+        //previous version:
+        //if (energy < 0.3) return 1.0;
+        //return 0.0; // this can also be done smarter of course.
     }
     
     void start_stop_foraging(rnd_t& rndgen,
