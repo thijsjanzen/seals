@@ -29,5 +29,6 @@ jobs:
         with:
           gcov: true
           gcov_include: simulation.h, individual.h, rand_t.h, parameters.h, config_parser.h
+          gcov_exclude: catch.h
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: thijsjanzen/seals
