@@ -24,6 +24,8 @@ jobs:
         run: g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
       - name: Run tests
         run: ./TestProgram
+      - name: Remove catch result
+        run: rm /home/runner/work/seals/seals/test#catch.h.gcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
