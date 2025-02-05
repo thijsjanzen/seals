@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Before Install
         run: |
           sudo apt-get install g++
@@ -24,12 +24,9 @@ jobs:
         run: g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
       - name: Run tests
         run: ./TestProgram
-      - name: Remove catch result
-        run: rm /home/runner/work/seals/seals/test#catch.h.gcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          gcov_include: simulation.h, individual.h, rand_t.h, parameters.h, config_parser.h
           gcov_ignore: test/catch.h
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: thijsjanzen/seals
