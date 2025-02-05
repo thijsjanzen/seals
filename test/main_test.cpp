@@ -13,15 +13,32 @@
 
 #include "catch.h"
 
-TEST_CASE("first_test")
+TEST_CASE("base_run") {
+    // basic run, no tests, just to get the code through
+    parameters params;
+    simulation sim(params);
+    
+    sim.initialize();
+    sim.run();
+}
+
+TEST_CASE("test initialization")
 {
     parameters params;
     simulation sim(params);
     
     sim.initialize();
     
-    REQUIRE(sim.mothers.size() == params.init_population_size);
-    REQUIRE(sim.pups.size() == params.init_population_size);
+    CHECK(sim.mothers.size() == params.init_population_size);
+    CHECK(sim.pups.size() == params.init_population_size);
+    
+    size_t id_counter = 0;
+    auto test_indiv = individual(params.init_energy,
+                                 life_stage::mother,
+                                 ++id_counter);
+    CHECK(test_indiv.current_location == location::colony);
+    CHECK(test_indiv.milk == 0.0);
+    CHECK(test_indiv.age == 0);
 }
 
 
