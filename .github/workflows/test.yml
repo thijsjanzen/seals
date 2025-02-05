@@ -1,3 +1,15 @@
+name: test_for_codecov
+
+on:
+  push:
+    branches: 
+      - main 
+      - add_tests
+  pull_request:
+    branches: 
+      - main 
+      - add_tests
+
 jobs:
   test-and-upstream:
     runs-on: ubuntu-latest
