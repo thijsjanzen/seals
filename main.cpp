@@ -14,10 +14,10 @@
 
 
 int main(int argc, const char * argv[]) {
-    
+    std::cout << "This is running!" << std::endl;
     parameters params;
     params.read_from_config("config.ini");
-    
+
     simulation sim(params);
     
     // here, we choose to run once, or do multiple replicates
