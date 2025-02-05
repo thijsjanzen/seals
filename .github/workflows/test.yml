@@ -29,3 +29,4 @@ jobs:
         with:
           gcov: true
           gcov_include: simulation.h
+          token: ${{ secrets.CODECOV_TOKEN }}
