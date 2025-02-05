@@ -13,15 +13,6 @@
 
 #include "catch.h"
 
-TEST_CASE("base_run") {
-    // basic run, no tests, just to get the code through
-    parameters params;
-    simulation sim(params);
-    
-    sim.initialize();
-    sim.run();
-}
-
 TEST_CASE("test initialization")
 {
     parameters params;
@@ -39,8 +30,27 @@ TEST_CASE("test initialization")
     CHECK(test_indiv.current_location == location::colony);
     CHECK(test_indiv.milk == 0.0);
     CHECK(test_indiv.age == 0);
+    CHECK(test_indiv.ID == id_counter);
+    CHECK(test_indiv.time_since_pup_death == -1);
 }
 
+TEST_CASE("test birth")
+{
+    parameters params;
+    simulation sim(params);
+    
+    sim.initialize();
+    size_t id_counter = 0;
+    auto test_indiv = individual(params.init_energy,
+                                 life_stage::mother,
+                                 ++id_counter);
+    
+    auto offspring = test_indiv.reproduce(++id_counter, params.init_offspring_energy);
+    
+    CHECK(offspring.age == 0);
+    CHECK(offspring.mother_ID == test_indiv.ID);
+    CHECK(offspring.ID == id_counter);
+}
 
 /*
 int main(int argc, const char * argv[]) {
