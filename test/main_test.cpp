@@ -20,8 +20,8 @@ TEST_CASE("first_test")
     
     sim.initialize();
     
-    CHECK(sim.mothers.size() == params.init_population_size);
-    CHECK(sim.pups.size() == params.init_population_size);
+    REQUIRE(sim.mothers.size() == params.init_population_size);
+    REQUIRE(sim.pups.size() == params.init_population_size);
 }
 
 
