@@ -1,10 +1,14 @@
-name: test
+name: test_for_codecov
 
 on:
   push:
-    branches: [ main, add_tests ]
+    branches: 
+      - main 
+      - add_tests
   pull_request:
-    branches: [ main, add_tests ]
+    branches: 
+      - main 
+      - add_tests
 
 jobs:
   test-and-upstream:
@@ -13,12 +17,17 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 2
-      - name: Run Tests
+      - name: Before Install
         run: |
-          g++ -o TestProgram -std=c++17 -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
-          ./TestProgram
-          gcov -o . test/main_test.cpp
-      - name: Upload
-        uses: codecov/codecov-action@v1
+          sudo apt-get install g++
+      - name: Compile program
+        run: g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
+      - name: Run tests
+        run: ./TestProgram
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          files: simulation.h.gcov,rand_t.h.gcov,parameters.h.gcov,individual.h.gcov,config_parser.h.gcov
+          gcov: true
+          gcov_include: simulation.h, individual.h, rand_t.h, parameters.h, config_parser.h
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: thijsjanzen/seals
