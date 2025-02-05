@@ -15,9 +15,9 @@ jobs:
           fetch-depth: 2
       - name: Run Tests
         run: |
-          g++ -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main.cpp
+          g++ -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
           ./TestProgram
-          gcov -o . test/main.cpp
+          gcov -o . test/main_test.cpp
       - name: Upload
         uses: codecov/codecov-action@v1
         with:
