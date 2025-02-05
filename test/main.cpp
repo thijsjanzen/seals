@@ -5,6 +5,8 @@
 //  Created by Thijs Janzen on 09/12/2024.
 //
 
+#define CATCH_CONFIG_MAIN
+
 #include <iostream>
 #include "../parameters.h"
 #include "../simulation.h"
