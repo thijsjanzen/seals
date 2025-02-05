@@ -13,12 +13,9 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 2
-      - name: Before Install
-        run: |
-          sudo apt-get install g++
       - name: Run Tests
         run: |
-          g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main.cpp
+          g++ -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main.cpp
           ./TestProgram
           gcov -o . test/main.cpp
       - name: Upload
