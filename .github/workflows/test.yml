@@ -18,9 +18,9 @@ jobs:
           sudo apt-get install g++
       - name: Run Tests
         run: |
-          g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main.cpp
+          g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
           ./TestProgram
-          gcov -o . test/main.cpp
+          gcov -o . test/main_test.cpp
       - name: Upload
         uses: codecov/codecov-action@v1
         with:
