@@ -20,12 +20,12 @@ jobs:
       - name: Before Install
         run: |
           sudo apt-get install g++
-      - name: Run Tests
-        run: |
-          g++ -std=c++14 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
-          ./TestProgram
-          gcov -o . test/main_test.cpp
-      - name: Upload
-        uses: codecov/codecov-action@v1
+      - name: Compile program
+        run: g++ -std=c++17 -o TestProgram -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
+      - name: Run tests
+        run: ./TestProgram
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
-          files: simulation.h.gcov,rand_t.h.gcov,parameters.h.gcov,individual.h.gcov,config_parser.h.gcov
+          gcov: true
+          gcov_include: simulation.h
