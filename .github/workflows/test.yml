@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 2
       - name: Run Tests
         run: |
-          g++ -o TestProgram -std=c++17 -fprofile-arcs -ftest-coverage -fprofile-generate test/main_test.cpp
+          g++ -o TestProgram -std=c++17 -fprofile-arcs -ftest-coverage test/main_test.cpp
           ./TestProgram
           gcov -o . test/main_test.cpp
       - name: Upload
