@@ -30,3 +30,4 @@ jobs:
           gcov: true
           gcov_include: simulation.h
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: thijsjanzen/seals
