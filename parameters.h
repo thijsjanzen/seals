@@ -13,31 +13,31 @@
 
 struct parameters {
   
-    size_t season_length;
-    size_t seed;
-    double init_energy;
-    double init_offspring_energy;
-    size_t init_population_size;
-    size_t num_seasons;
+    size_t season_length = 100;
+    size_t seed = 42;
+    double init_energy = 1.0;
+    double init_offspring_energy = 1.0;
+    size_t init_population_size = 200;
+    size_t num_seasons = 1;
     
-    double winter_survival_prob;
+    double winter_survival_prob = 1.0;
     
-    double foraging_duration;
-    double foraging_stdev;
+    double foraging_duration = 5;
+    double foraging_stdev = 0.3;
     
-    double milk_production;
+    double milk_production = 0.2;
     
-    double maintenance_cost;
+    double maintenance_cost = 0.1;
     
-    size_t max_num_tries;
+    size_t max_num_tries = 5;
     
-    double milk_consumption;
-    int max_pop_size;
-    double milk_prod_cutoff;
-    double c_survival_mother;
-    double c_survival_pup;
-    int nurse_amount;
-    double base_surv_pup;
+    double milk_consumption = 0.1;
+    int max_pop_size = 200;
+    double milk_prod_cutoff = 10;
+    double c_survival_mother = 20.0;
+    double c_survival_pup = 10.0;
+    int nurse_amount = 2;
+    double base_surv_pup = 10;
     
     void read_from_config(const std::string file_name) {
         ConfigFile from_config(file_name);
