@@ -25,7 +25,7 @@ jobs:
       - name: Run tests
         run: ./TestProgram
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           gcov: true
           gcov_include: simulation.h, individual.h, rand_t.h, parameters.h, config_parser.h
