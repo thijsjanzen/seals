@@ -27,8 +27,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          gcov: true
           gcov_include: simulation.h, individual.h, rand_t.h, parameters.h, config_parser.h
-          gcov_ignore: catch.h
+          gcov_ignore: test/catch.h
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: thijsjanzen/seals
