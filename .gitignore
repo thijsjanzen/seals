@@ -1,3 +1,6 @@
-
 *.o
 run_model
+*.pbxproj
+*.xcworkspacedata
+*.plist
+*.xcuserstate
