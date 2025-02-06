@@ -176,7 +176,7 @@ struct simulation {
                 }
                 
                 for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
-                    
+                    auto x = available_mothers.begin();
                     auto r = potential_mothers[num_tries];
                     std::advance(x, r);
                     index = x->second;

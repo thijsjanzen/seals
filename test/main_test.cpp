@@ -135,10 +135,30 @@ TEST_CASE("test find mother") {
         CHECK(mother_index >= 0);
     }
     
+    sim.mothers[0].milk = 2.0;
+    sim.available_mothers.clear();
+    sim.available_mothers.insert({sim.mothers[0].ID, 0});
+    auto mother_index = sim.find_mother(0);
+    auto allo_mother_index = sim.find_mother(1);
+    CHECK(mother_index == allo_mother_index);
     
+    // now with multiple mothers
+    sim.available_mothers.clear();
+    for (size_t i = 0; i < 5; ++i) {
+        sim.mothers[i].milk = 2.0;
+        sim.available_mothers.insert({sim.mothers[i].ID, i});
+    }
     
+    std::vector<size_t> picks(1000);
+    for (size_t i = 0; i < 1000; ++i) {
+        picks[i] = sim.find_mother(10);
+    }
     
+    // there are only 5 mothers with > 1 milk, so out of 1000 draws, we only should have those 5:
     
+    std::sort(picks.begin(), picks.end());
+    picks.erase(unique(picks.begin(),picks.end()),picks.end());
+    CHECK(picks.size() == 5);
 }
 
 /*
