@@ -161,6 +161,28 @@ TEST_CASE("test find mother") {
     CHECK(picks.size() == 5);
 }
 
+TEST_CASE("start foraging") {
+    parameters params;
+    simulation sim(params);
+    
+    size_t id_counter = 0;
+    auto mother = individual(params.init_energy,
+                             life_stage::mother,
+                             ++id_counter);
+    
+    
+    mother.energy = 0.0;
+    mother.start_stop_foraging(sim.rndgen, params);
+    CHECK(mother.current_location == foraging);
+    CHECK(mother.foraging_duration > 0);
+    while(mother.current_location == foraging) {
+        mother.start_stop_foraging(sim.rndgen, params);
+    }
+    CHECK(mother.current_location == colony);
+    CHECK(mother.foraging_duration < 1);
+    CHECK(mother.milk == 1.0);
+}
+
 /*
 int main(int argc, const char * argv[]) {
     std::cout << "This is running!" << std::endl;
