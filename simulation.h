@@ -84,22 +84,26 @@ struct simulation {
         for (size_t i = 0; i < mothers.size(); ) {
             mothers[i].age++;
             if (mothers[i].milk < 0) { std::cout << "ERROR! Negative milk..." << std::endl; }
-            mothers[i].start_stop_foraging(rndgen,
-                                  params);
-
+            
             if (mothers[i].current_location == location::colony) {
                 mothers[i].pay_maintenance(params);
-                if (mothers[i].live_offspring) {mothers[i].time_since_pup_death = -1;}
-                else {mothers[i].time_since_pup_death++;}
+                if (mothers[i].live_offspring) {
+                    mothers[i].time_since_pup_death = -1;
+                } else {
+                    mothers[i].time_since_pup_death++;
+                }
+                
                 if (mothers[i].time_since_pup_death < params.milk_prod_cutoff) {
                     mothers[i].produce_milk(params);
                 }
             }
 
-            if (!mothers[i].survive(rndgen, params.c_survival_mother, 1.0)) {//here, b_survival is manually set to 1.0
+            if (!mothers[i].survive(rndgen, params.c_survival_mother, 1.0)) {// here, b_survival is manually set to 1.0
                 mothers[i] = mothers.back();
                 mothers.pop_back();
             } else {
+                mothers[i].start_stop_foraging(rndgen, params);
+                
                 if (mothers[i].current_location == location::colony) {
                     available_mothers.insert({mothers[i].ID, i});
                 }
@@ -224,8 +228,8 @@ struct simulation {
                                                //In later versions: might make this dependent on energy of nurse & pup, for example
                                                //so then could for example write nurse_amount=params.nurse_amount*(1-pups[i].Energy), or something roughly like that
         for (int nurse_iter = 0; nurse_iter < nurse_amount; nurse_iter++) {
-            if (nurse->milk > 0) {//can't feed if there is no milk!! //@THIJS: is this correctly done?
-                nurse->milk -= p.milk_consumption; 
+            if (nurse->milk >= p.milk_consumption) {  // can't feed if there is no milk!! //@THIJS: is this correctly done?: yes.
+                nurse->milk -= p.milk_consumption;
                 pup->energy += p.milk_consumption;
                 //nurse->time_since_pup_death = -1;///CHANGE!! toggle this to see impact
             }

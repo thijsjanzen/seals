@@ -45,9 +45,6 @@ struct individual {
     double calc_survival_prob(double c_survival, double b_survival) {//here, I added b_survival, as a way to add a baseline
         if (energy < 0) energy = 0.0;
         double prob = (1.0 - exp(-c_survival * energy)) * b_survival;
-        //double prob = energy; // this should be done smarter ofc.
-        //if (prob > 1.0) prob = 1.0;
-        
         return prob;
     }
     
@@ -65,7 +62,9 @@ struct individual {
     double calc_foraging_prob() {
         
         double foraging_prob = 1 - energy;
-        if (foraging_prob > 1 || foraging_prob < 0) { std::cout << foraging_prob<<" Error! Foraging_prob not a probability..." << std::endl; }
+        if (foraging_prob > 1 || foraging_prob < 0) {
+            std::cout << foraging_prob<<" Error! Foraging_prob not a probability..." << std::endl;
+        }
         return foraging_prob;
         //previous version:
         //if (energy < 0.3) return 1.0;
@@ -103,14 +102,18 @@ struct individual {
             // update milk?
         }
         if (current_location == colony) {
-            milk += params.milk_production;
-            energy -= 0.1 * params.milk_production;
+            if (energy >= 0.1 * params.milk_production) {
+                milk += params.milk_production;
+                energy -= 0.1 * params.milk_production;
+            }
         }
     }
     
     void pay_maintenance(const parameters& params) {
         energy -= params.maintenance_cost;
         if (milk > 1.0) energy -= params.maintenance_cost;
+        
+        if (energy < 0) energy = 0.0;
     }
     
     bool allow_allo_nursing() {
