@@ -27,8 +27,7 @@ struct simulation {
     void run() {
         id_counter = 0;
         initialize();
-        std::cout << "Running!!" << std::endl;
-
+        
         //indiv data
         /*std::ofstream outf("ind_data_PupSur10_b1_ResetTimeSincePupDeath_FeedReset10.csv", std::ios::app);
         outf << "Season" << "," << "Day" << "," << "ID" << "," << "Location" << "," << "Stage" << "," << "Energy" << "," << "Milk" << "," << "Age" << "," << "MotherID";
@@ -41,17 +40,21 @@ struct simulation {
 
 
         for (size_t season = 0; season < params.num_seasons; ++season) {
-            std::cout << "Season: " << season << std::endl;
+           // std::cout << "Season: " << season << std::endl;
             simulate_season(season, outf);
             update_population_end_of_season();
             //std::cout << season << " " << mothers.size() << " " << pups.size() << "\n";
             if (mothers.size() + pups.size() < 1) break;
         }
+        outf.close();
     }
     
     void initialize() {
         mothers.clear();
         pups.clear();
+        nurse_counter = 0;
+        allonurse_counter = 0;
+
         for (size_t i = 0; i < params.init_population_size; ++i) {
             mothers.push_back( individual(params.init_energy,
                                        life_stage::mother,
@@ -70,9 +73,9 @@ struct simulation {
             update_mothers();
             update_pups();
             write_to_file(season, days, outf);
-            if (days == params.season_length - 1) {
-                std::cout <<"At the end of season we have: " << season << " " << days << " " << mothers.size() << " " << pups.size() << "\n";
-            }
+         //   if (days == params.season_length - 1) {
+          //      std::cout <<"At the end of season we have: " << season << " " << days << " " << mothers.size() << " " << pups.size() << "\n";
+         //   }
         }
     }
     
@@ -112,13 +115,11 @@ struct simulation {
             pups[i].pay_maintenance(params);
             if (!pups[i].survive(rndgen,params.c_survival_pup,1.0)) {//set baseline manually here //for some reason, it doesn't work otherwise
                 //a little for loop to update whether this mother has a dead pup or not... there must be an easier way to do this?
-                
-                for (auto& j : mothers) {
-                    if (j.ID == pups[i].mother_ID) {
-                        j.live_offspring = false;
+                for (int j = 0; j < mothers.size(); j++) {
+                    if (mothers[j].ID == pups[i].mother_ID) {
+                        mothers[j].live_offspring = false;
                     }
                 }
-                
                 pups[i] = pups.back();
                 pups.pop_back();
             } else {
@@ -134,7 +135,6 @@ struct simulation {
                 ++i;
             }
         }
-        
         for (size_t i = 0; i < pups.size(); i++) {
             if (pups[i].energy > 1) { std::cout << "Pup has high energy! " << pups[i].energy << std::endl; }
         }
@@ -142,7 +142,7 @@ struct simulation {
     
     int find_mother(size_t pup_id) {
         if (available_mothers.empty()) return -1;
-        
+
         int index = -1;
         bool mother_found = false;
         
@@ -150,66 +150,24 @@ struct simulation {
         if (x != available_mothers.end()) {
             index = x->second;
             mother_found = true;
-            if (mothers[index].milk > 0) {//@Thijs: is this correctly done?
-                nurse_counter++; //If statement is to ensure that the nursing counter only increases if the mother has enough milk for a nursing event
+            if (mothers[x->second].milk>0) { //@Thijs: is this correctly done?
+                nurse_counter++;  //If statement is to ensure that the nursing counter only increases if the mother has enough milk for a nursing event
             }
         }
         
-        bool PICK_NOT_REPEATING = true;
         
         if (index < 0) {
-            size_t max_num_tries = std::min(params.max_num_tries,
-                                            available_mothers.size());
-            
-            if (PICK_NOT_REPEATING) {
-                
-                std::vector<size_t> potential_mothers(available_mothers.size());
-                std::iota(potential_mothers.begin(), potential_mothers.end(), 0);
-                
-                for (size_t i = 0; i < max_num_tries; ++i) {
-                    if (potential_mothers.size() > 1) {
-                        size_t j = i + rndgen.random_number(static_cast<int>(potential_mothers.size() - i));
-                        if (i != j) {
-                            std::swap(potential_mothers[i], potential_mothers[j]);
-                        }
-                    }
+            for (size_t num_tries = 0; num_tries < params.max_num_tries; ++num_tries) {
+                index = rndgen.random_number(mothers.size());
+                while (mothers[index].current_location != location::colony) {
+                    index = rndgen.random_number(mothers.size());
                 }
-                
-                for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
-                    auto x = available_mothers.begin();
-                    auto r = potential_mothers[num_tries];
-                    std::advance(x, r);
-                    index = x->second;
-                    
-                    if (mothers[index].allow_allo_nursing()) {
-                        mother_found = true;
-                        if (mothers[index].milk > 0) {
-                            allonurse_counter++;
-                        }
-                        break;
+                if (mothers[index].allow_allo_nursing()) {
+                    mother_found = true;
+                    if (mothers[index].milk > 0) {
+                        allonurse_counter++;
                     }
-                }
-                
-            } else {
-                 // random tries
-                for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
-                    
-                    auto x = available_mothers.begin();
-                    auto r = rndgen.random_number(available_mothers.size());
-                    std::advance(x, r);
-                    index = x->second;
-                    
-                    // index = rndgen.random_number(mothers.size());
-                    //while (mothers[index].current_location != location::colony) {
-                    //    index = rndgen.random_number(mothers.size());
-                    //}
-                    if (mothers[index].allow_allo_nursing()) {
-                        mother_found = true;
-                        if (mothers[index].milk > 0) {
-                            allonurse_counter++;
-                        }
-                        break;
-                    }
+                    break;
                 }
             }
         }

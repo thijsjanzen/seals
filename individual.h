@@ -44,7 +44,7 @@ struct individual {
     
     double calc_survival_prob(double c_survival, double b_survival) {//here, I added b_survival, as a way to add a baseline
         if (energy < 0) energy = 0.0;
-        double prob = (1.0 - exp(-c_survival * energy))*b_survival;
+        double prob = (1.0 - exp(-c_survival * energy)) * b_survival;
         //double prob = energy; // this should be done smarter ofc.
         //if (prob > 1.0) prob = 1.0;
         

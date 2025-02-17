@@ -148,6 +148,8 @@ TEST_CASE("test find mother") {
         sim.mothers[i].milk = 2.0;
         sim.available_mothers.insert({sim.mothers[i].ID, i});
     }
+    sim.mothers[5].milk = 0.9;
+    sim.available_mothers.insert({sim.mothers[5].ID, 5}); // add non receptive mother
     
     std::vector<size_t> picks(1000);
     for (size_t i = 0; i < 1000; ++i) {
