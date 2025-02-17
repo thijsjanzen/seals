@@ -152,7 +152,7 @@ struct simulation {
         
         auto x = available_mothers.find(pup_id);
         if (x != available_mothers.end()) {
-            index = x->second;
+            index = static_cast<int>(x->second);
             mother_found = true;
             if (mothers[x->second].milk>0) { //@Thijs: is this correctly done?
                 nurse_counter++;  //If statement is to ensure that the nursing counter only increases if the mother has enough milk for a nursing event
@@ -160,18 +160,61 @@ struct simulation {
         }
         
         
+        bool PICK_NOT_REPEATING = true;
+                
         if (index < 0) {
-            for (size_t num_tries = 0; num_tries < params.max_num_tries; ++num_tries) {
-                index = rndgen.random_number(mothers.size());
-                while (mothers[index].current_location != location::colony) {
-                    index = rndgen.random_number(mothers.size());
-                }
-                if (mothers[index].allow_allo_nursing()) {
-                    mother_found = true;
-                    if (mothers[index].milk > 0) {
-                        allonurse_counter++;
+            size_t max_num_tries = std::min(params.max_num_tries,
+                                            available_mothers.size());
+            
+            if (PICK_NOT_REPEATING) {
+                
+                std::vector<size_t> potential_mothers(available_mothers.size());
+                std::iota(potential_mothers.begin(), potential_mothers.end(), 0);
+                
+                for (size_t i = 0; i < max_num_tries; ++i) {
+                    if (potential_mothers.size() > 1) {
+                        size_t j = i + rndgen.random_number(static_cast<int>(potential_mothers.size() - i));
+                        if (i != j) {
+                            std::swap(potential_mothers[i], potential_mothers[j]);
+                        }
                     }
-                    break;
+                }
+                
+                for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
+                    auto x = available_mothers.begin();
+                    auto r = potential_mothers[num_tries];
+                    std::advance(x, r);
+                    index = static_cast<int>(x->second);
+                    
+                    if (mothers[index].allow_allo_nursing()) {
+                        mother_found = true;
+                        if (mothers[index].milk > 0) {
+                            allonurse_counter++;
+                        }
+                        break;
+                    }
+                }
+                
+            } else {
+                 // random tries
+                for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
+                    
+                    auto x = available_mothers.begin();
+                    auto r = rndgen.random_number(available_mothers.size());
+                    std::advance(x, r);
+                    index = static_cast<int>(x->second);
+                    
+                    // index = rndgen.random_number(mothers.size());
+                    //while (mothers[index].current_location != location::colony) {
+                    //    index = rndgen.random_number(mothers.size());
+                    //}
+                    if (mothers[index].allow_allo_nursing()) {
+                        mother_found = true;
+                        if (mothers[index].milk > 0) {
+                            allonurse_counter++;
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -183,7 +226,7 @@ struct simulation {
     
     void update_population_end_of_season() {
         //only add pups to the mother population if there is still space
-        int OpenSpaces = params.max_pop_size - mothers.size();
+        size_t OpenSpaces = params.max_pop_size - mothers.size();
         //std::cout << "Nr mothers: " << mothers.size() << ", open spaces: " << OpenSpaces << std::endl;
 
         for (int i = 0; i < OpenSpaces; i++) {
@@ -224,10 +267,10 @@ struct simulation {
     
     void nurse(individual* pup, individual* nurse,
                const parameters& p) {
-        int nurse_amount = params.nurse_amount;//new!! 
-                                               //In later versions: might make this dependent on energy of nurse & pup, for example
-                                               //so then could for example write nurse_amount=params.nurse_amount*(1-pups[i].Energy), or something roughly like that
-        for (int nurse_iter = 0; nurse_iter < nurse_amount; nurse_iter++) {
+        auto nurse_amount = params.nurse_amount; //new!!
+                                                //In later versions: might make this dependent on energy of nurse & pup, for example
+                                                //so then could for example write nurse_amount=params.nurse_amount*(1-pups[i].Energy), or something roughly like that
+        for (size_t nurse_iter = 0; nurse_iter < nurse_amount; nurse_iter++) {
             if (nurse->milk >= p.milk_consumption) {  // can't feed if there is no milk!! //@THIJS: is this correctly done?: yes.
                 nurse->milk -= p.milk_consumption;
                 pup->energy += p.milk_consumption;

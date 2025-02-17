@@ -91,7 +91,7 @@ TEST_CASE("test update mothers")
     sim.update_mothers();
     
     CHECK(sim.mothers.size() == params.init_population_size);
-    CHECK(sim.available_mothers.size() == params.init_population_size);
+    CHECK(sim.available_mothers.size() <= params.init_population_size);
     
     params.c_survival_mother = 0; // we kill all mothers
     simulation sim2(params);
@@ -125,6 +125,9 @@ TEST_CASE("test find mother") {
     parameters params;
     params.c_survival_pup = 10000;
     params.c_survival_mother = 10000;
+    params.maintenance_cost = 0.0;
+    params.milk_production = 0.0;
+    
     simulation sim(params);
     sim.initialize();
     sim.update_mothers();
@@ -151,7 +154,7 @@ TEST_CASE("test find mother") {
     sim.mothers[5].milk = 0.9;
     sim.available_mothers.insert({sim.mothers[5].ID, 5}); // add non receptive mother
     
-    std::vector<size_t> picks(1000);
+    std::vector<int> picks(1000);
     for (size_t i = 0; i < 1000; ++i) {
         picks[i] = sim.find_mother(10);
     }

@@ -11,7 +11,7 @@ struct rnd_t {
     rndgen = rndgen_t;
   }
 
-  rnd_t(size_t seed) {
+  rnd_t(unsigned int seed) {
     std::mt19937 rndgen_t(seed);
     rndgen = rndgen_t;
   }

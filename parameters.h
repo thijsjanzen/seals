@@ -14,7 +14,7 @@
 struct parameters {
   
     size_t season_length = 100;
-    size_t seed = 42;
+    unsigned int seed = 42;
     double init_energy = 1.0;
     double init_offspring_energy = 1.0;
     size_t init_population_size = 200;
@@ -34,18 +34,18 @@ struct parameters {
     size_t max_num_tries = 5;
     
     double milk_consumption = 0.1;
-    int max_pop_size = 200;
+    size_t max_pop_size = 200;
     double milk_prod_cutoff = 10;
     double c_survival_mother = 20.0;
     double c_survival_pup = 10.0;
-    int nurse_amount = 2;
+    size_t nurse_amount = 2;
     double base_surv_pup = 10;
     
     void read_from_config(const std::string file_name) {
         ConfigFile from_config(file_name);
         
         init_population_size = from_config.getValueOfKey<size_t>("init_population_size");
-        seed = from_config.getValueOfKey<size_t>("seed");
+        seed = from_config.getValueOfKey<unsigned int>("seed");
         season_length = from_config.getValueOfKey<size_t>("season_length");
         init_energy = from_config.getValueOfKey<double>("init_energy");
         init_offspring_energy = from_config.getValueOfKey<double>("init_offspring_energy");

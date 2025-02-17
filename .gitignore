@@ -4,3 +4,4 @@ run_model
 *.xcworkspacedata
 *.plist
 *.xcuserstate
+test/main.cpp
