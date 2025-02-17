@@ -18,7 +18,9 @@ struct parameters {
     double init_energy = 1.0;
     double init_offspring_energy = 1.0;
     size_t init_population_size = 200;
+    
     size_t num_seasons = 1;
+    size_t num_replicates = 100;
     
     double winter_survival_prob = 1.0;
     
@@ -49,6 +51,7 @@ struct parameters {
         init_offspring_energy = from_config.getValueOfKey<double>("init_offspring_energy");
         
         num_seasons = from_config.getValueOfKey<size_t>("num_seasons");
+        num_replicates = from_config.getValueOfKey<size_t>("num_replicates");
         
         winter_survival_prob = from_config.getValueOfKey<double>("winter_survival_prob");
         
