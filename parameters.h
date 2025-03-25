@@ -13,42 +13,45 @@
 
 struct parameters {
   
-    size_t season_length;
-    size_t seed;
-    double init_energy;
-    double init_offspring_energy;
-    size_t init_population_size;
-    size_t num_seasons;
+    size_t season_length = 100;
+    unsigned int seed = 42;
+    double init_energy = 1.0;
+    double init_offspring_energy = 1.0;
+    size_t init_population_size = 200;
     
-    double winter_survival_prob;
+    size_t num_seasons = 1;
+    size_t num_replicates = 100;
     
-    double foraging_duration;
-    double foraging_stdev;
+    double winter_survival_prob = 1.0;
     
-    double milk_production;
+    double foraging_duration = 5;
+    double foraging_stdev = 0.3;
     
-    double maintenance_cost;
+    double milk_production = 0.2;
     
-    size_t max_num_tries;
+    double maintenance_cost = 0.1;
     
-    double milk_consumption;
-    int max_pop_size;
-    double milk_prod_cutoff;
-    double c_survival_mother;
-    double c_survival_pup;
-    int nurse_amount;
-    double base_surv_pup;
+    size_t max_num_tries = 5;
+    
+    double milk_consumption = 0.1;
+    size_t max_pop_size = 200;
+    double milk_prod_cutoff = 10;
+    double c_survival_mother = 20.0;
+    double c_survival_pup = 10.0;
+    size_t nurse_amount = 2;
+    double base_surv_pup = 10;
     
     void read_from_config(const std::string file_name) {
         ConfigFile from_config(file_name);
         
         init_population_size = from_config.getValueOfKey<size_t>("init_population_size");
-        seed = from_config.getValueOfKey<size_t>("seed");
+        seed = from_config.getValueOfKey<unsigned int>("seed");
         season_length = from_config.getValueOfKey<size_t>("season_length");
         init_energy = from_config.getValueOfKey<double>("init_energy");
         init_offspring_energy = from_config.getValueOfKey<double>("init_offspring_energy");
         
         num_seasons = from_config.getValueOfKey<size_t>("num_seasons");
+        num_replicates = from_config.getValueOfKey<size_t>("num_replicates");
         
         winter_survival_prob = from_config.getValueOfKey<double>("winter_survival_prob");
         
@@ -65,6 +68,6 @@ struct parameters {
         c_survival_mother = from_config.getValueOfKey<size_t>("c_survival_mother");
         c_survival_pup = from_config.getValueOfKey<size_t>("c_survival_pup");
         nurse_amount = from_config.getValueOfKey<size_t>("nurse_amount"); //This parameter is currently useless, but we can use it to make nursing dependent on energy levels later on
-        base_surv_pup = from_config.getValueOfKey<size_t >("base_surv_pup"); //@THIJS: For some reason, this keeps rounding to integers, idk why... so now I don't use this variable (just set it manually in the main code). I am not sure what went wrong...
+        base_surv_pup = from_config.getValueOfKey<double>("base_surv_pup"); //@THIJS: For some reason, this keeps rounding to integers, idk why... so now I don't use this variable (just set it manually in the main code). I am not sure what went wrong...//Update: should be fixed now!
     }
 };

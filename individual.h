@@ -21,6 +21,8 @@ struct individual {
     int age;
 
     int foraging_duration;
+    int colonystay_duration;
+    double E_at_ForageStart;
     
     location current_location;
     life_stage stage;
@@ -33,6 +35,8 @@ struct individual {
         age = 0;
         current_location = location::colony;
         time_since_pup_death = -1;
+        colonystay_duration = 0;
+        E_at_ForageStart = init_energy;//only average across indivs that have already left for foraging obv
     }
     
     bool survive(rnd_t& rndgen, double c_survival, double b_survival) {
@@ -44,10 +48,7 @@ struct individual {
     
     double calc_survival_prob(double c_survival, double b_survival) {//here, I added b_survival, as a way to add a baseline
         if (energy < 0) energy = 0.0;
-        double prob = (1.0 - exp(-c_survival * energy))*b_survival;
-        //double prob = energy; // this should be done smarter ofc.
-        //if (prob > 1.0) prob = 1.0;
-        
+        double prob = (1.0 - exp(-c_survival * energy)) * b_survival;
         return prob;
     }
     
@@ -65,7 +66,9 @@ struct individual {
     double calc_foraging_prob() {
         
         double foraging_prob = 1 - energy;
-        if (foraging_prob > 1 || foraging_prob < 0) { std::cout << foraging_prob<<" Error! Foraging_prob not a probability..." << std::endl; }
+        if (foraging_prob > 1 || foraging_prob < 0) {
+            std::cout << foraging_prob<<" Error! Foraging_prob not a probability..." << std::endl;
+        }
         return foraging_prob;
         //previous version:
         //if (energy < 0.3) return 1.0;
@@ -77,7 +80,11 @@ struct individual {
         if (current_location == location::colony) {
             double prob = calc_foraging_prob();
             if (rndgen.bernouilli(prob)) {
+                E_at_ForageStart = energy;
                 start_foraging(rndgen, params);
+            }
+            else {
+                colonystay_duration = colonystay_duration + 1;
             }
         } else {
             foraging_duration--;
@@ -86,6 +93,7 @@ struct individual {
                 current_location = colony;
                 //energy = 1.0; //is now set at the beginning of foraging, no energy is used up whilst foraging
                 milk = 1.0;
+                colonystay_duration = 0;
             }
         }
     }
@@ -103,14 +111,18 @@ struct individual {
             // update milk?
         }
         if (current_location == colony) {
-            milk += params.milk_production;
-            energy -= 0.1 * params.milk_production;
+            if (energy >= 0.1 * params.milk_production) {
+                milk += params.milk_production;
+                energy -= 0.1 * params.milk_production;
+            }
         }
     }
     
-    void pay_maintenance(const parameters& params) {
-        energy -= params.maintenance_cost;
-        if (milk > 1.0) energy -= params.maintenance_cost;
+    void pay_maintenance(double maint_cost) {
+        energy -= maint_cost;
+        if (milk > 1.0) energy -= maint_cost;
+        
+        if (energy < 0) energy = 0.0;
     }
     
     bool allow_allo_nursing() {
