@@ -37,6 +37,10 @@ struct rnd_t {
     while(output < 0) output = norm_dist(rndgen);
     return output;
   }
+
+  double uniform_real(double low_bound, double high_bound) {
+      return std::uniform_real_distribution<double>(low_bound, high_bound)(rndgen);
+  }
 };
 
 

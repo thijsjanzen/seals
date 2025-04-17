@@ -29,7 +29,8 @@ struct parameters {
     
     double milk_production = 0.2;
     
-    double maintenance_cost = 0.1;
+    double maintenance_cost_mother = 0.1;
+    double maintenance_cost_pup = 0.05;
     
     size_t max_num_tries = 5;
     
@@ -39,7 +40,9 @@ struct parameters {
     double c_survival_mother = 20.0;
     double c_survival_pup = 10.0;
     size_t nurse_amount = 2;
-    double base_surv_pup = 10;
+    double base_surv_pup = 1;
+    double base_surv_mother = 1;
+
     
     void read_from_config(const std::string file_name) {
         ConfigFile from_config(file_name);
@@ -60,7 +63,9 @@ struct parameters {
         
         milk_production = from_config.getValueOfKey<double>("milk_production");//make sure this is equal to milk consumption * nurse amount
         milk_consumption = from_config.getValueOfKey<double>("milk_consumption");
-        maintenance_cost = from_config.getValueOfKey<double>("maintenance_cost");
+        
+        maintenance_cost_mother = from_config.getValueOfKey<double>("maintenance_cost_mother");
+        maintenance_cost_pup = from_config.getValueOfKey<double>("maintenance_cost_pup");
         
         max_num_tries = from_config.getValueOfKey<size_t>("max_num_tries");
         max_pop_size = from_config.getValueOfKey<size_t>("max_pop_size");
@@ -68,6 +73,7 @@ struct parameters {
         c_survival_mother = from_config.getValueOfKey<size_t>("c_survival_mother");
         c_survival_pup = from_config.getValueOfKey<size_t>("c_survival_pup");
         nurse_amount = from_config.getValueOfKey<size_t>("nurse_amount"); //This parameter is currently useless, but we can use it to make nursing dependent on energy levels later on
-        base_surv_pup = from_config.getValueOfKey<size_t >("base_surv_pup"); //@THIJS: For some reason, this keeps rounding to integers, idk why... so now I don't use this variable (just set it manually in the main code). I am not sure what went wrong...
+        base_surv_pup = from_config.getValueOfKey<double>("base_surv_pup");
+        base_surv_mother = from_config.getValueOfKey<double>("base_surv_mother");
     }
 };
