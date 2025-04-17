@@ -10,6 +10,20 @@
 enum life_stage {pup, mother}; //pup=0, mother=1
 enum location {colony, foraging}; //colony=0, foraging=1
 
+enum class activity {foraging, colony, drinking, nothing};
+
+struct track {
+    int t_;
+    double energy_;
+    double milk_;
+    
+    activity current_activity_;
+    life_stage seal_type;
+    
+    track(int t, double e, double m, activity ca, life_stage ls) :
+    t_(t), energy_(e), milk_(m), current_activity_(ca), seal_type(ls) {}
+};
+
 struct individual {
     double energy;
     double milk;
@@ -21,9 +35,15 @@ struct individual {
     int age;
 
     int foraging_duration;
+    int colonystay_duration;
+    double E_at_ForageStart;
     
     location current_location;
     life_stage stage;
+    
+    std::vector<track> history;
+    std::vector<int> past_foraging_duration;
+    std::vector<int> past_colony_duration;
     
     individual(double init_energy,
                life_stage init_stage,
@@ -33,6 +53,8 @@ struct individual {
         age = 0;
         current_location = location::colony;
         time_since_pup_death = -1;
+        colonystay_duration = 0;
+        E_at_ForageStart = init_energy;//only average across indivs that have already left for foraging obv
     }
     
     bool survive(rnd_t& rndgen, double c_survival, double b_survival) {
@@ -76,7 +98,12 @@ struct individual {
         if (current_location == location::colony) {
             double prob = calc_foraging_prob();
             if (rndgen.bernouilli(prob)) {
+                E_at_ForageStart = energy;
                 start_foraging(rndgen, params);
+                past_foraging_duration.push_back(foraging_duration);
+            }
+            else {
+                colonystay_duration = colonystay_duration + 1;
             }
         } else {
             foraging_duration--;
@@ -85,6 +112,8 @@ struct individual {
                 current_location = colony;
                 //energy = 1.0; //is now set at the beginning of foraging, no energy is used up whilst foraging
                 milk = 1.0;
+                past_colony_duration.push_back(colonystay_duration);
+                colonystay_duration = 0;
             }
         }
     }
@@ -95,6 +124,7 @@ struct individual {
         energy = 1.0;
         foraging_duration = rndgen.normal_positive(params.foraging_duration,
                                                    params.foraging_stdev);
+        
     }
     
     void produce_milk(const parameters& params) {
@@ -109,9 +139,9 @@ struct individual {
         }
     }
     
-    void pay_maintenance(const parameters& params) {
-        energy -= params.maintenance_cost;
-        if (milk > 1.0) energy -= params.maintenance_cost;
+    void pay_maintenance(double maint_cost) {
+        energy -= maint_cost;
+        if (milk > 1.0) energy -= maint_cost;
         
         if (energy < 0) energy = 0.0;
     }
@@ -120,6 +150,24 @@ struct individual {
         if (milk >= 1.0) return true;
         
         return false;
+    }
+    
+    void update_track(size_t t) {
+        activity ca = activity::foraging;
+        if (stage == mother) {
+            if (current_location == colony) {
+                ca = activity::colony;
+            } else {
+                ca = activity::foraging;
+            }
+        }
+        if (stage == pup) {
+            ca = activity::nothing;
+        }
+        
+        
+        //   foraging, colony, drinking, nothing
+        history.push_back(track(t, energy, milk, ca, stage));
     }
     
 };

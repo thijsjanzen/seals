@@ -11,7 +11,7 @@ struct rnd_t {
     rndgen = rndgen_t;
   }
 
-  rnd_t(size_t seed) {
+  rnd_t(unsigned int seed) {
     std::mt19937 rndgen_t(seed);
     rndgen = rndgen_t;
   }
@@ -36,6 +36,10 @@ struct rnd_t {
     double  output = norm_dist(rndgen);
     while(output < 0) output = norm_dist(rndgen);
     return output;
+  }
+
+  double uniform_real(double low_bound, double high_bound) {
+      return std::uniform_real_distribution<double>(low_bound, high_bound)(rndgen);
   }
 };
 
