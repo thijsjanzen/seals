@@ -18,6 +18,8 @@ struct simulation {
     //keeping track of some counters
     int nurse_counter = 0;
     int allonurse_counter = 0;
+    
+    int num_arrived_mothers = 0;
 
     
     simulation(const parameters& p) : params(p) {
@@ -37,17 +39,24 @@ struct simulation {
         pups.clear();
         nurse_counter = 0;
         allonurse_counter = 0;
+        num_arrived_mothers = 0;
 
         for (size_t i = 0; i < params.init_population_size; ++i) {
             //double NewInitEnergy = rndgen.uniform_real(0.0, 1.0);
-            double NewInitEnergy = params.init_energy;
-            mothers.push_back( individual(NewInitEnergy,
-                                       life_stage::mother,
-                                       ++id_counter)); // this increments the counter after use!
-            auto new_pup = mothers.back().reproduce(++id_counter,
-                                                    params.init_offspring_energy);
-            mothers.back().milk = 1.0;
-            pups.push_back(new_pup);
+            
+            if (rndgen.bernouilli(params.arrival_prob)) {
+                
+                double NewInitEnergy = params.init_energy;
+                mothers.push_back( individual(NewInitEnergy,
+                                              life_stage::mother,
+                                              ++id_counter)); // this increments the counter after use!
+                auto new_pup = mothers.back().reproduce(++id_counter,
+                                                        params.init_offspring_energy);
+                mothers.back().milk = 1.0;
+                pups.push_back(new_pup);
+                
+                num_arrived_mothers++;
+            }
         }
         
         update_tracks(-1);
@@ -58,6 +67,11 @@ struct simulation {
             //std::cout << "Day: " << days << std::endl;
             nurse_counter = 0; //for now, calculate nurse counter per day
             allonurse_counter = 0;
+            
+            if (num_arrived_mothers < params.init_population_size) {
+                add_mothers();
+            }
+            
             update_mothers(days);
             update_pups(days);
             
@@ -65,6 +79,25 @@ struct simulation {
             
             if (days == 99) {
                 write_to_file(season, days, r, outf);
+            }
+        }
+    }
+    
+    void add_mothers() {
+        size_t remaining = params.init_population_size - num_arrived_mothers;
+        for (size_t i = 0; i < remaining; ++i) {
+            if (rndgen.bernouilli(params.arrival_prob)) {
+                
+                double NewInitEnergy = params.init_energy;
+                mothers.push_back( individual(NewInitEnergy,
+                                              life_stage::mother,
+                                              ++id_counter)); // this increments the counter after use!
+                auto new_pup = mothers.back().reproduce(++id_counter,
+                                                        params.init_offspring_energy);
+                mothers.back().milk = 1.0;
+                pups.push_back(new_pup);
+                
+                num_arrived_mothers++;
             }
         }
     }

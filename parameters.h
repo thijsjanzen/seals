@@ -14,6 +14,8 @@
 struct parameters {
   
     size_t season_length = 100;
+    double arrival_prob = 0.3;
+    
     unsigned int seed = 42;
     double init_energy = 1.0;
     double init_offspring_energy = 1.0;
@@ -47,6 +49,8 @@ struct parameters {
         ConfigFile from_config(file_name);
         
         init_population_size = from_config.getValueOfKey<size_t>("init_population_size");
+        arrival_prob = from_config.getValueOfKey<double>("arrival_prob");
+        
         seed = from_config.getValueOfKey<unsigned int>("seed");
         season_length = from_config.getValueOfKey<size_t>("season_length");
         init_energy = from_config.getValueOfKey<double>("init_energy");
