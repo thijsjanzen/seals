@@ -18,6 +18,8 @@ struct simulation {
     //keeping track of some counters
     int nurse_counter = 0;
     int allonurse_counter = 0;
+    
+    int num_arrived_mothers = 0;
 
     
     simulation(const parameters& p) : params(p) {
@@ -37,17 +39,24 @@ struct simulation {
         pups.clear();
         nurse_counter = 0;
         allonurse_counter = 0;
+        num_arrived_mothers = 0;
 
         for (size_t i = 0; i < params.init_population_size; ++i) {
             //double NewInitEnergy = rndgen.uniform_real(0.0, 1.0);
-            double NewInitEnergy = params.init_energy;
-            mothers.push_back( individual(NewInitEnergy,
-                                       life_stage::mother,
-                                       ++id_counter)); // this increments the counter after use!
-            auto new_pup = mothers.back().reproduce(++id_counter,
-                                                    params.init_offspring_energy);
-            mothers.back().milk = 1.0;
-            pups.push_back(new_pup);
+            
+            if (rndgen.bernouilli(params.arrival_prob)) {
+                
+                double NewInitEnergy = params.init_energy;
+                mothers.push_back( individual(NewInitEnergy,
+                                              life_stage::mother,
+                                              ++id_counter)); // this increments the counter after use!
+                auto new_pup = mothers.back().reproduce(++id_counter,
+                                                        params.init_offspring_energy);
+                mothers.back().milk = 1.0;
+                pups.push_back(new_pup);
+                
+                num_arrived_mothers++;
+            }
         }
         
         update_tracks(-1);
@@ -58,6 +67,11 @@ struct simulation {
             //std::cout << "Day: " << days << std::endl;
             nurse_counter = 0; //for now, calculate nurse counter per day
             allonurse_counter = 0;
+            
+            if (num_arrived_mothers < params.init_population_size) {
+                add_mothers();
+            }
+            
             update_mothers(days);
             update_pups(days);
             
@@ -65,6 +79,25 @@ struct simulation {
             
             if (days == 99) {
                 write_to_file(season, days, r, outf);
+            }
+        }
+    }
+    
+    void add_mothers() {
+        size_t remaining = params.init_population_size - num_arrived_mothers;
+        for (size_t i = 0; i < remaining; ++i) {
+            if (rndgen.bernouilli(params.arrival_prob)) {
+                
+                double NewInitEnergy = params.init_energy;
+                mothers.push_back( individual(NewInitEnergy,
+                                              life_stage::mother,
+                                              ++id_counter)); // this increments the counter after use!
+                auto new_pup = mothers.back().reproduce(++id_counter,
+                                                        params.init_offspring_energy);
+                mothers.back().milk = 1.0;
+                pups.push_back(new_pup);
+                
+                num_arrived_mothers++;
             }
         }
     }
@@ -111,6 +144,9 @@ struct simulation {
     }
     
     void update_pups(size_t t) {
+        
+        std::vector<size_t> orphans; // orphans, or pups with a foraging mother
+        
         for (size_t i = 0; i < pups.size(); ) {
             pups[i].age++;
             pups[i].pay_maintenance(params.maintenance_cost_pup);
@@ -126,26 +162,40 @@ struct simulation {
                 pups[i] = pups.back();
                 pups.pop_back();
             } else {
-                auto mother_index = find_mother(pups[i].mother_ID);
+                auto mother_index = find_own_mother(pups[i].mother_ID);
                 if (mother_index >= 0) {
                     nurse(&pups[i], &mothers[mother_index], params);
                 } else {
-                    // no (allo) mother found to nurse from!
+                  // no own mother available
+                  orphans.push_back(i);
                 }
+                
                 if (pups[i].energy > 1) { pups[i].energy = 1; } //@Thijs: New! I think it makes sense to bound energy between 0 and 1. You can't just keep eating and get more and more energy from that. What do you think?
                 if (pups[i].energy < 0) { pups[i].energy = 0; }
 
                 ++i;
             }
         }
+        
+        // go over orphans
+        for (const auto& i : orphans) {
+            auto mother_index = find_allo_mother(pups[i].mother_ID);
+            if (mother_index >= 0) {
+                nurse(&pups[i], &mothers[mother_index], params);
+            }
+            // else: no mother found, no nursing
+            if (pups[i].energy > 1) { pups[i].energy = 1; } //@Thijs: New! I think it makes sense to bound energy between 0 and 1. You can't just keep eating and get more and more energy from that. What do you think?
+            if (pups[i].energy < 0) { pups[i].energy = 0; }
+        }
+        
+        
         for (size_t i = 0; i < pups.size(); i++) {
             if (pups[i].energy > 1) { std::cout << "Pup has high energy! " << pups[i].energy << std::endl; }
         }
     }
     
-    int find_mother(size_t pup_id) {
+    int find_own_mother(size_t pup_id) {
         if (available_mothers.empty()) return -1;
-
         int index = -1;
         bool mother_found = false;
         
@@ -157,44 +207,49 @@ struct simulation {
                 nurse_counter++;  //If statement is to ensure that the nursing counter only increases if the mother has enough milk for a nursing event
             }
         }
+        return index;
+    }
+    
+    int find_allo_mother(size_t pup_id) {
+        if (available_mothers.empty()) return -1;
 
-
-        if (index < 0) {
-            size_t max_num_tries = std::min(params.max_num_tries,
-                                            available_mothers.size());
-                
-                std::vector<size_t> potential_mothers(available_mothers.size());
-                std::iota(potential_mothers.begin(), potential_mothers.end(), 0);
-                
-                for (size_t i = 0; i < max_num_tries; ++i) {
-                    if (potential_mothers.size() > 1) {
-                        size_t j = i + rndgen.random_number(static_cast<int>(potential_mothers.size() - i));
-                        if (i != j) {
-                            std::swap(potential_mothers[i], potential_mothers[j]);
-                        }
-                    }
+        int index = -1;
+        bool mother_found = false;
+        
+        size_t max_num_tries = std::min(params.max_num_tries,
+                                        available_mothers.size());
+            
+        std::vector<size_t> potential_mothers(available_mothers.size());
+        std::iota(potential_mothers.begin(), potential_mothers.end(), 0);
+        
+        for (size_t i = 0; i < max_num_tries; ++i) {
+            if (potential_mothers.size() > 1) {
+                size_t j = i + rndgen.random_number(static_cast<int>(potential_mothers.size() - i));
+                if (i != j) {
+                    std::swap(potential_mothers[i], potential_mothers[j]);
                 }
-                
-                for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
-                    auto x = available_mothers.begin();
-                    auto r = potential_mothers[num_tries];
-                    std::advance(x, r);
-                    index = static_cast<int>(x->second);
-                    
-                    if (mothers[index].allow_allo_nursing()) {
-                        mother_found = true;
-                        if (mothers[index].milk > 0) {
-                            allonurse_counter++;
-                        }
-                        break;
-                    }
-                }
+            }
         }
+        
+        for (size_t num_tries = 0; num_tries < max_num_tries; ++num_tries) {
+            auto x = available_mothers.begin();
+            auto r = potential_mothers[num_tries];
+            std::advance(x, r);
+            index = static_cast<int>(x->second);
+            
+            if (mothers[index].allow_allo_nursing()) {
+                mother_found = true;
+                if (mothers[index].milk > 0) {
+                    allonurse_counter++;
+                }
+                break;
+            }
+        }
+        
         if (!mother_found) index = -1;
         
         return index;
     }
-    
     
     void update_population_end_of_season() {
         //only add pups to the mother population if there is still space
