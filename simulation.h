@@ -28,20 +28,22 @@ struct simulation {
     }
     
     void run(std::ofstream& outf, size_t r) {
-        id_counter = 0;
-        initialize();
         int season = 0;
         simulate_season(season, r, outf);
     }
     
-    void initialize() {
+    void initialize(size_t seed) {
+        rndgen.set_seed(seed);
+        id_counter = 0;
+
         mothers.clear();
         pups.clear();
+        
         nurse_counter = 0;
         allonurse_counter = 0;
         num_arrived_mothers = 0;
 
-        for (size_t i = 0; i < params.init_population_size; ++i) {
+      /*  for (size_t i = 0; i < params.init_population_size; ++i) {
             //double NewInitEnergy = rndgen.uniform_real(0.0, 1.0);
             
             if (rndgen.bernouilli(params.arrival_prob)) {
@@ -57,35 +59,46 @@ struct simulation {
                 
                 num_arrived_mothers++;
             }
-        }
+        }*/
         
-        update_tracks(-1);
+      //  update_tracks(-1);
     }
     
+    
     void simulate_season(size_t season, size_t r, std::ofstream& outf) {
-        for (size_t days = 0; days < params.season_length; ++days) {
+        
+        int arrival_number = params.init_population_size / params.arrival_time;
+        
+        for (int days = -1 * static_cast<int>(params.arrival_time);
+             days < static_cast<int>(params.season_length);
+             ++days) {
             //std::cout << "Day: " << days << std::endl;
             nurse_counter = 0; //for now, calculate nurse counter per day
             allonurse_counter = 0;
             
-            if (num_arrived_mothers < params.init_population_size) {
-                add_mothers();
+            if (days < 0) {
+                if (days == -1) {
+                    // due to rounding issues, arrival_number * arrival_time may not equal to init_population_size
+                    arrival_number = params.init_population_size - num_arrived_mothers;
+                }
+                add_mothers(arrival_number);
             }
             
             update_mothers(days);
             update_pups(days);
             
             update_tracks(days);
-            
-            if (days == 99) {
+
+            write_to_file(season, days, r, outf);
+
+            /*if (days == 99) {
                 write_to_file(season, days, r, outf);
-            }
+            }*/
         }
     }
     
-    void add_mothers() {
-        size_t remaining = params.init_population_size - num_arrived_mothers;
-        for (size_t i = 0; i < remaining; ++i) {
+    void add_mothers(size_t number) {
+        for (size_t i = 0; i < number; ++i) {
             if (rndgen.bernouilli(params.arrival_prob)) {
                 
                 double NewInitEnergy = params.init_energy;
@@ -307,7 +320,7 @@ struct simulation {
     }
     
     void write_to_file(size_t season,
-                       size_t day,
+                       int day,
                        size_t r,
                        std::ofstream& outf) {
         //std::ofstream outf("results.csv", std::ios::app);
@@ -338,6 +351,7 @@ struct simulation {
         avgE_pup = avgE_pup / static_cast<double>(pups.size());
         avg_colonystay_duration = avg_colonystay_duration / static_cast<double>(FemaleForageCounter);
         avg_E_at_ForageStart = avg_E_at_ForageStart / static_cast<double>(FemaleForageCounter);
+        double pup_season_surv_prob = std::pow(params.base_surv_pup, 100);
         //std::cout << "AvgE at FStart" << avg_E_at_ForageStart << std::endl;
 
         outf << season << "," << day
@@ -359,6 +373,8 @@ struct simulation {
             << "," << avgMilk_mother
             << "," << avgE_pup
             << "," << avg_colonystay_duration
+            << "," << params.arrival_prob
+            //<< "," << pup_season_surv_prob
             << "\n";
 
         //Individual data
@@ -400,7 +416,18 @@ struct simulation {
     }
     
     void write_state(const std::vector<individual>& v, std::ofstream& out,
-                     bool alive) {
+                     bool alive, bool header) {
+        
+        if (header) {
+            out << "ID" << "\t" <<
+                    "t" << "\t" <<
+                    "energy" << "\t" <<
+                    "milk"   << "\t" <<
+                    "activity" << "\t" <<
+                    "type" << "\t" <<
+            "alive" << "\n";
+        }
+        
         for (const auto& i : v) {
             for (const auto& j : i.history) {
                 out << i.ID << "\t" 
@@ -417,10 +444,10 @@ struct simulation {
     void write_track(const std::string& file_name) {
         std::ofstream out_file(file_name.c_str());
         
-        write_state(mothers, out_file, true);
-        write_state(pups, out_file, true);
-        write_state(dead_mothers, out_file, false);
-        write_state(dead_pups, out_file, false);
+        write_state(mothers, out_file, true, true);
+        write_state(pups, out_file, true, false);
+        write_state(dead_mothers, out_file, false, false);
+        write_state(dead_pups, out_file, false, false);
         out_file.close();
     }
     

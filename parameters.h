@@ -44,6 +44,8 @@ struct parameters {
     size_t nurse_amount = 2;
     double base_surv_pup = 1;
     double base_surv_mother = 1;
+    
+    size_t arrival_time = 10;
 
     
     void read_from_config(const std::string file_name) {
@@ -79,5 +81,7 @@ struct parameters {
         nurse_amount = from_config.getValueOfKey<size_t>("nurse_amount"); //This parameter is currently useless, but we can use it to make nursing dependent on energy levels later on
         base_surv_pup = from_config.getValueOfKey<double>("base_surv_pup");
         base_surv_mother = from_config.getValueOfKey<double>("base_surv_mother");
+        
+        arrival_time = from_config.getValueOfKey<size_t>("arrival_time");
     }
 };
